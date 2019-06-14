@@ -78,10 +78,18 @@ public class ChooseAreaFragment extends Fragment {
                     queryCountries();
                 }else if(currentLevel == LEVEL_COUNTRY){
                     String weatherId = countryList.get(position).getWeatherId();
-                    Intent intent = new Intent(getActivity(),WeatherActivity.class); //碎片是需要加载到活动中的
-                    intent.putExtra("weather_id",weatherId);
-                    startActivity(intent);
-                    getActivity().finish(); //把显示省市县活动销毁
+                    if( getActivity() instanceof MainActivity ){  //如果碎片是添加到MainActivity，则跳转到WeatherActivity
+                        Intent intent = new Intent(getActivity(),WeatherActivity.class); //碎片是需要加载到活动中的
+                        intent.putExtra("weather_id",weatherId);
+                        startActivity(intent);
+                        getActivity().finish(); //销毁MainActivity
+                    }else if( getActivity() instanceof WeatherActivity ){
+                        WeatherActivity activity = (WeatherActivity) getActivity();
+                        activity.drawerLayout.closeDrawers();
+                        activity.swipeRefresh.setRefreshing(true);
+                        activity.requestWeather(weatherId);
+                    }
+
                 }
             }
         });
