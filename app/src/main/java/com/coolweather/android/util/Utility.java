@@ -5,11 +5,16 @@ import android.text.TextUtils;
 import com.coolweather.android.db.City;
 import com.coolweather.android.db.Country;
 import com.coolweather.android.db.Province;
+import com.coolweather.android.gson.Weather;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/*
+    解析从服务器返回的JSON数据，将其键值放在对应实体类（键--实例域）中
+ */
 public class Utility {
     /*
          解析和处理服务器返回的省级数据  JSON格式 {"id":1,"name":"北京"}  使用JSONObject解析
@@ -79,6 +84,20 @@ public class Utility {
             }
         }
         return false;
+    }
+    /*
+       将返回的JSON数据解析成Weather实体类
+     */
+    public static Weather handleWeatherResponse(String response){
+        try {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
+            String weatherContnet = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContnet,Weather.class);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

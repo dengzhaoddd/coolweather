@@ -1,6 +1,7 @@
 package com.coolweather.android;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -38,9 +39,9 @@ public class ChooseAreaFragment extends Fragment {
     private ProgressDialog progressDialog;
     private TextView titleText;
     private Button backButton;
-    private ListView listView;
+    private ListView listView;  //子项为字符串（省市县名）不需另外定义类和布局
     private ArrayAdapter<String> adapter;
-    private List<String> dataList = new ArrayList<>();
+    private List<String> dataList = new ArrayList<>();  //显示省市县的每个界面的 临时List
 
     private List<Province> provinceList; //省列表
     private List<City> cityList; //市列表
@@ -50,6 +51,9 @@ public class ChooseAreaFragment extends Fragment {
     private City selectedCity; //选中的市
     private int currentLevel; //选中的级别
 
+    /*
+         碎片生命周期回调函数
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.choose_area,container,false);
@@ -61,9 +65,9 @@ public class ChooseAreaFragment extends Fragment {
         return view;
     }
     @Override
-    public void onActivityCreated(Bundle savedInstanceState){
+    public void onActivityCreated(Bundle savedInstanceState){  //该方法在主活动启动时自动调用
         super.onActivityCreated(savedInstanceState);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {  //listView子项设置点击事件
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(currentLevel == LEVEL_PROVINCE){
@@ -72,6 +76,12 @@ public class ChooseAreaFragment extends Fragment {
                 }else if(currentLevel == LEVEL_CITY){
                     selectedCity = cityList.get(position);
                     queryCountries();
+                }else if(currentLevel == LEVEL_COUNTRY){
+                    String weatherId = countryList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(),WeatherActivity.class); //碎片是需要加载到活动中的
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    getActivity().finish(); //把显示省市县活动销毁
                 }
             }
         });
@@ -87,6 +97,9 @@ public class ChooseAreaFragment extends Fragment {
         });
         queryProvinces();
     }
+    /*
+       查询全国所有省，优先从数据库查询，如果没有查询到再去服务器查询  （逐级 省-市-县）
+     */
     private void queryProvinces(){
         titleText.setText("中国");
         backButton.setVisibility(View.GONE);
@@ -104,6 +117,9 @@ public class ChooseAreaFragment extends Fragment {
             queryFromServer(address,"province");
         }
     }
+    /*
+       查询全国所有市，优先从数据库查询，如果没有查询到再去服务器查询
+     */
     private void queryCities(){
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
@@ -122,6 +138,9 @@ public class ChooseAreaFragment extends Fragment {
             queryFromServer(address,"city");
         }
     }
+    /*
+       查询全国所有县，优先从数据库查询，如果没有查询到再去服务器查询
+     */
     private void queryCountries(){
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
@@ -142,6 +161,9 @@ public class ChooseAreaFragment extends Fragment {
         }
 
     }
+    /*
+       根据传入的地址和类型从服务器上查询省市县数据
+     */
     private void queryFromServer(String address, final String type){
         showProgressDialog();
         HttpUtil.sendOkhttpRequest(address, new Callback() {
@@ -187,6 +209,9 @@ public class ChooseAreaFragment extends Fragment {
         });
 
     }
+    /*
+       显示进度对话框
+     */
     private void showProgressDialog(){
         if(progressDialog == null){
             progressDialog = new ProgressDialog(getActivity());
@@ -195,6 +220,9 @@ public class ChooseAreaFragment extends Fragment {
         }
         progressDialog.show();
     }
+    /*
+     关闭进度对话框
+     */
     private void closeProgressDialog(){
         if(progressDialog!=null){
             progressDialog.dismiss();
